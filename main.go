@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"code.t25.tokyo/lockdown/internal/entropy"
 	"code.t25.tokyo/lockdown/internal/layout"
 	"code.t25.tokyo/lockdown/internal/monotonic"
 	"code.t25.tokyo/lockdown/internal/timing"
@@ -24,16 +25,18 @@ type Monitor struct {
 	timingFP    *timing.Fingerprint
 	layoutFP    *layout.Fingerprint
 	monotonicFP *monotonic.Fingerprint
+	entropyFP   *entropy.Fingerprint
 	threshold   int
 	mu          sync.RWMutex
 }
 
 func NewMonitor() *Monitor {
 	m := &Monitor{
-		timingFP:    timing.NewFingerprint(),
+		entropyFP:   entropy.NewFingerprint(),
 		layoutFP:    layout.NewFingerprint(),
 		monotonicFP: monotonic.NewFingerprint(),
-		threshold:   2,
+		timingFP:    timing.NewFingerprint(),
+		threshold:   3,
 	}
 
 	go m.poll()
@@ -63,9 +66,9 @@ func (m *Monitor) assert() bool {
 
 	detections := 0
 
-	if m.timingFP.Detect() {
+	if m.entropyFP.Detect() {
 		detections++
-		log.Println("inconsistency detected in cpu timing")
+		log.Println("inconsistency detected in pRNG")
 	}
 
 	if m.layoutFP.Detect() {
@@ -78,5 +81,11 @@ func (m *Monitor) assert() bool {
 		log.Println("inconsistency detected in system tick")
 	}
 
+	if m.timingFP.Detect() {
+		detections++
+		log.Println("inconsistency detected in cpu timing")
+	}
+
+	log.Printf("indicators found: %d", detections)
 	return detections >= m.threshold
 }

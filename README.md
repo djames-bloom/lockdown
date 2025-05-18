@@ -6,9 +6,9 @@ Toolkit of utilities to detect possible VM imaging, rollbacks and snapshots
 - CPU timing inconsistencies
 - Memory layout analysis
 - Monotonic clock analysis
+- Entropy PRNG pattern analysis
 
 ## Planned
-- Entropy PRNG pattern analysis
 - Stack corruption
 - Sync state
 - CPUID latency
