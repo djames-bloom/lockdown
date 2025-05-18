@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"code.t25.tokyo/lockdown/internal/corruption"
 	"code.t25.tokyo/lockdown/internal/entropy"
 	"code.t25.tokyo/lockdown/internal/layout"
 	"code.t25.tokyo/lockdown/internal/monotonic"
@@ -22,21 +23,23 @@ func main() {
 }
 
 type Monitor struct {
-	timingFP    *timing.Fingerprint
-	layoutFP    *layout.Fingerprint
-	monotonicFP *monotonic.Fingerprint
-	entropyFP   *entropy.Fingerprint
-	threshold   int
-	mu          sync.RWMutex
+	corruptionFP *corruption.Fingerprint
+	entropyFP    *entropy.Fingerprint
+	layoutFP     *layout.Fingerprint
+	monotonicFP  *monotonic.Fingerprint
+	timingFP     *timing.Fingerprint
+	threshold    int
+	mu           sync.RWMutex
 }
 
 func NewMonitor() *Monitor {
 	m := &Monitor{
-		entropyFP:   entropy.NewFingerprint(),
-		layoutFP:    layout.NewFingerprint(),
-		monotonicFP: monotonic.NewFingerprint(),
-		timingFP:    timing.NewFingerprint(),
-		threshold:   3,
+		corruptionFP: corruption.NewFingerprint(),
+		entropyFP:    entropy.NewFingerprint(),
+		layoutFP:     layout.NewFingerprint(),
+		monotonicFP:  monotonic.NewFingerprint(),
+		timingFP:     timing.NewFingerprint(),
+		threshold:    3,
 	}
 
 	go m.poll()
@@ -84,6 +87,11 @@ func (m *Monitor) assert() bool {
 	if m.timingFP.Detect() {
 		detections++
 		log.Println("inconsistency detected in cpu timing")
+	}
+
+	if m.corruptionFP.Detect() {
+		detections++
+		log.Println("inconsistency detected in resource allocation")
 	}
 
 	log.Printf("indicators found: %d", detections)

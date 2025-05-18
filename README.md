@@ -7,9 +7,9 @@ Toolkit of utilities to detect possible VM imaging, rollbacks and snapshots
 - Memory layout analysis
 - Monotonic clock analysis
 - Entropy PRNG pattern analysis
+- Stack corruption
 
 ## Planned
-- Stack corruption
 - Sync state
 - CPUID latency
 - Restricted registers
